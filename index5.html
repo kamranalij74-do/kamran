@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111214">
+  <meta name="description" content="Discover, watch, and save real YouTube videos with Playroom.">
+  <title>Playroom — Your video corner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111214;
+      --panel: #191a1e;
+      --panel-hover: #222328;
+      --line: #2b2c31;
+      --text: #f4f4f5;
+      --muted: #a3a4ab;
+      --subtle: #72737b;
+      --red: #ff4e55;
+      --lime: #d3ff76;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 98px; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: "DM Sans", sans-serif; -webkit-font-smoothing: antialiased; }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; text-decoration: none; }
+    button { color: inherit; }
+    .topbar {
+      position: sticky;
+      z-index: 5;
+      top: 0;
+      height: 68px;
+      display: grid;
+      grid-template-columns: 1fr minmax(200px, 440px) 1fr;
+      align-items: center;
+      gap: 25px;
+      padding: 0 5%;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      background: rgba(17,18,20,.91);
+      backdrop-filter: blur(14px);
+    }
+    .brand { width: fit-content; display: inline-flex; align-items: center; gap: 10px; font: 700 19px/1 "Space Grotesk", sans-serif; letter-spacing: -.055em; }
+    .brand-icon { width: 34px; height: 27px; display: grid; place-items: center; border-radius: 9px; background: var(--red); color: white; }
+    .brand-icon svg { width: 14px; height: 14px; margin-left: 2px; }
+    .brand-word span { color: var(--red); }
+    .searchbar { height: 41px; display: flex; overflow: hidden; border: 1px solid #34353a; border-radius: 999px; background: #1c1d20; }
+    .searchbar:focus-within { border-color: #686970; }
+    .searchbar input { width: 100%; min-width: 0; padding: 0 17px; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 13px; }
+    input::placeholder { color: #86878f; }
+    .search-button { width: 53px; flex: 0 0 53px; display: grid; place-items: center; border: 0; border-left: 1px solid #34353a; background: #26272b; cursor: pointer; }
+    .search-button:hover { background: #313237; }
+    .search-button svg { width: 17px; height: 17px; color: #d6d6d9; }
+    .header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
+    .icon-button { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 50%; background: transparent; color: #d0d0d4; cursor: pointer; }
+    .icon-button:hover, .icon-button.active { border-color: var(--line); background: #222328; color: var(--lime); }
+    .icon-button svg { width: 18px; height: 18px; }
+    .layout { min-height: calc(100vh - 68px); display: grid; grid-template-columns: 215px minmax(0, 1fr); }
+    .sidebar {
+      position: sticky;
+      top: 68px;
+      height: calc(100vh - 68px);
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      padding: 25px 15px 18px;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255,255,255,.055);
+    }
+    .nav-group { display: grid; gap: 4px; }
+    .group-title { margin: 0 0 7px 10px; color: var(--subtle); font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .side-link { min-height: 39px; display: flex; align-items: center; gap: 13px; padding: 0 11px; border-radius: 10px; color: #ceced2; font-size: 12px; font-weight: 500; transition: background .18s, color .18s; }
+    .side-link:hover, .side-link.selected { background: #242529; color: var(--text); }
+    .side-link.selected { color: var(--lime); }
+    .side-link svg { width: 17px; height: 17px; flex: 0 0 17px; }
+    .sidebar-foot { margin-top: auto; padding: 15px 10px 0; border-top: 1px solid var(--line); color: var(--subtle); font-size: 10px; line-height: 1.8; }
+    main { min-width: 0; padding: 35px clamp(22px, 5vw, 68px) 56px; }
+    .welcome { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 0 0 23px; }
+    .kicker { margin: 0 0 8px; color: var(--lime); font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3 { font-family: "Space Grotesk", sans-serif; }
+    h1 { margin-bottom: 0; font-size: clamp(26px, 3.8vw, 39px); font-weight: 700; letter-spacing: -.065em; line-height: 1.12; }
+    .welcome-copy { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .api-button, .outline-button, .primary-button {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: border-color .18s, background .18s, transform .18s;
+    }
+    .api-button:hover, .outline-button:hover { border-color: #53545b; background: #202125; }
+    .api-button svg { width: 15px; height: 15px; }
+    .primary-button { border-color: var(--lime); background: var(--lime); color: #171914; }
+    .primary-button:hover { transform: translateY(-1px); background: #e0ff9f; }
+    .api-status { display: flex; align-items: center; gap: 7px; margin: 0 0 18px; color: var(--muted); font-size: 10px; }
+    .status-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #d3a559; }
+    .api-status.connected .status-dot { background: #8dde88; }
+    .api-status.connected { color: #a4d8a0; }
+    .hero {
+      min-height: 215px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 34px clamp(22px, 5vw, 54px);
+      overflow: hidden;
+      border: 1px solid rgba(214,255,118,.15);
+      border-radius: 22px;
+      background:
+        radial-gradient(ellipse at 76% 32%, rgba(211,255,118,.17), transparent 26%),
+        radial-gradient(ellipse at 99% 108%, rgba(255,78,85,.16), transparent 34%),
+        linear-gradient(115deg, #20251d 0%, #1a1c1b 55%, #21211f 100%);
+    }
+    .hero::after { position: absolute; top: -62px; right: 5%; width: 255px; height: 255px; border: 1px solid rgba(211,255,118,.14); border-radius: 50%; box-shadow: 0 0 0 32px rgba(211,255,118,.025), 0 0 0 65px rgba(211,255,118,.02); content: ""; }
+    .hero-content { max-width: 510px; position: relative; z-index: 1; }
+    .hero .kicker { color: var(--lime); }
+    .hero h2 { max-width: 440px; margin: 0 0 10px; font-size: clamp(25px, 3.2vw, 37px); font-weight: 700; letter-spacing: -.06em; line-height: 1.11; }
+    .hero h2 span { color: var(--lime); }
+    .hero-copy { max-width: 420px; margin: 0 0 20px; color: #b4b5ac; font-size: 12px; line-height: 1.7; }
+    .hero-form { width: min(440px, 100%); display: flex; gap: 8px; }
+    .hero-form input { width: 100%; min-width: 0; height: 41px; padding: 0 14px; border: 1px solid #42443d; border-radius: 10px; outline: 0; background: rgba(17,18,20,.74); color: var(--text); font-size: 11px; }
+    .hero-form input:focus { border-color: var(--lime); }
+    .hero-form .primary-button { flex-shrink: 0; border-radius: 10px; }
+    .section-title { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin: 37px 0 17px; }
+    h2.section-heading { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.04em; }
+    .section-caption { margin: 5px 0 0; color: var(--subtle); font-size: 10px; }
+    .category-row { display: flex; gap: 8px; padding: 1px 0 5px; overflow-x: auto; scrollbar-width: none; }
+    .category-row::-webkit-scrollbar { display: none; }
+    .category-pill { min-height: 32px; flex: 0 0 auto; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: #1b1c20; color: #c4c5c9; font-size: 10px; font-weight: 600; cursor: pointer; transition: background .16s, color .16s, border-color .16s; }
+    .category-pill:hover, .category-pill.active { border-color: var(--lime); background: var(--lime); color: #171914; }
+    .results-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 27px 0 16px; }
+    .results-toolbar h2 { margin: 0; font-size: 18px; letter-spacing: -.045em; }
+    .results-count { color: var(--subtle); font-size: 10px; }
+    .video-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px 16px; }
+    .video-card { min-width: 0; }
+    .thumbnail {
+      aspect-ratio: 16 / 9;
+      position: relative;
+      display: block;
+      overflow: hidden;
+      border-radius: 13px;
+      background: #24252a;
+      cursor: pointer;
+    }
+    .thumbnail img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .28s; }
+    .video-card:hover .thumbnail img { transform: scale(1.035); }
+    .thumbnail::after { position: absolute; inset: 55% 0 0; background: linear-gradient(transparent, rgba(0,0,0,.26)); content: ""; pointer-events: none; }
+    .play-overlay { position: absolute; z-index: 1; inset: 0; display: grid; place-items: center; opacity: 0; transition: opacity .18s; }
+    .video-card:hover .play-overlay, .thumbnail:focus-visible .play-overlay { opacity: 1; }
+    .play-overlay span { width: 45px; height: 45px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; background: rgba(17,18,20,.78); color: white; font-size: 18px; padding-left: 3px; }
+    .video-body { display: grid; grid-template-columns: 33px minmax(0, 1fr) 28px; gap: 10px; padding: 12px 1px 0; }
+    .channel-avatar { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #292a30; color: var(--lime); font-size: 11px; font-weight: 700; }
+    .video-copy { min-width: 0; }
+    .video-copy h3 { margin: 1px 0 5px; display: -webkit-box; overflow: hidden; color: #f1f1f3; font-size: 12px; font-weight: 600; line-height: 1.5; letter-spacing: -.015em; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .video-copy p { margin: 0; overflow: hidden; color: #8c8d94; font-size: 10px; line-height: 1.65; text-overflow: ellipsis; white-space: nowrap; }
+    .save-button { width: 28px; height: 32px; display: grid; place-items: start center; padding: 1px; border: 0; background: transparent; color: #95969d; cursor: pointer; }
+    .save-button:hover, .save-button.saved { color: var(--lime); }
+    .save-button svg { width: 16px; height: 16px; }
+    .empty-state { grid-column: 1 / -1; min-height: 200px; display: grid; place-items: center; padding: 26px; border: 1px dashed #393a40; border-radius: 16px; color: var(--muted); text-align: center; font-size: 12px; line-height: 1.8; }
+    .empty-state strong { display: block; margin-bottom: 4px; color: var(--text); font: 600 16px "Space Grotesk", sans-serif; }
+    .inline-link { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
+    .player-section { display: none; margin: 28px 0 35px; }
+    .player-section.visible { display: block; }
+    .player-wrap { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #090909; }
+    .player-wrap iframe { width: 100%; height: 100%; display: block; border: 0; }
+    .player-caption { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 11px; }
+    .player-caption h2 { margin: 0; font: 600 15px "Space Grotesk", sans-serif; }
+    .toast { position: fixed; z-index: 15; right: 22px; bottom: 22px; max-width: min(410px, calc(100% - 32px)); padding: 13px 17px; transform: translateY(15px); border: 1px solid #3b3c42; border-radius: 12px; background: #242529; color: var(--text); box-shadow: 0 14px 40px rgba(0,0,0,.3); font-size: 11px; line-height: 1.6; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+    .toast.visible { transform: translateY(0); opacity: 1; }
+    dialog { width: min(470px, calc(100% - 28px)); padding: 0; border: 1px solid #38393f; border-radius: 20px; background: #191a1e; color: var(--text); box-shadow: 0 24px 90px rgba(0,0,0,.55); }
+    dialog::backdrop { background: rgba(0,0,0,.72); backdrop-filter: blur(4px); }
+    .dialog-inner { padding: 25px; }
+    .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 17px; }
+    .dialog-head h2 { margin: 0 0 6px; font: 700 20px "Space Grotesk", sans-serif; letter-spacing: -.04em; }
+    .dialog-head p, .dialog-copy { color: var(--muted); font-size: 11px; line-height: 1.75; }
+    .dialog-head p { margin: 0; }
+    .dialog-close { width: 33px; height: 33px; flex: 0 0 33px; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; }
+    .key-label { display: block; margin: 14px 0 7px; color: #d8d8dc; font-size: 11px; font-weight: 600; }
+    .key-input { width: 100%; height: 42px; padding: 0 12px; border: 1px solid #3b3c42; border-radius: 9px; outline: 0; background: #121316; color: var(--text); font-size: 12px; }
+    .key-input:focus { border-color: var(--lime); }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 17px; }
+    .dialog-copy { margin: 14px 0 0; }
+    .dialog-copy a { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
+    .mobile-nav { display: none; }
+    @media (min-width: 1500px) { .video-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (max-width: 1050px) {
+      .topbar { grid-template-columns: 1fr minmax(180px, 390px) 1fr; padding-inline: 3%; gap: 15px; }
+      .layout { grid-template-columns: 185px minmax(0, 1fr); }
+      main { padding-inline: 32px; }
+      .video-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      html { scroll-padding-top: 78px; }
+      .topbar { height: 59px; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding-inline: 14px; }
+      .brand { gap: 7px; font-size: 16px; }
+      .brand-icon { width: 30px; height: 24px; }
+      .searchbar { height: 37px; }
+      .searchbar input { padding-inline: 11px; font-size: 11px; }
+      .search-button { width: 40px; flex-basis: 40px; }
+      .header-actions { gap: 0; }
+      .header-actions .icon-button { width: 34px; height: 36px; }
+      .header-actions .icon-button:first-child { display: none; }
+      .layout { min-height: calc(100vh - 116px); display: block; }
+      .sidebar { display: none; }
+      main { padding: 24px 16px 75px; }
+      .welcome { align-items: start; }
+      .welcome .api-button { min-height: 34px; gap: 5px; padding-inline: 10px; font-size: 10px; }
+      .welcome .api-button svg { width: 13px; }
+      .welcome-copy { max-width: 220px; line-height: 1.5; }
+      .hero { min-height: 226px; padding: 25px 19px; border-radius: 16px; }
+      .hero::after { top: -32px; right: -81px; }
+      .hero h2 { max-width: 350px; font-size: 28px; }
+      .hero-copy { max-width: 330px; font-size: 11px; }
+      .hero-form { gap: 6px; }
+      .hero-form input { height: 39px; font-size: 10px; }
+      .hero-form .primary-button { min-height: 39px; padding-inline: 11px; font-size: 10px; }
+      .section-title { margin-top: 28px; }
+      .video-grid { gap: 20px 11px; }
+      .thumbnail { border-radius: 10px; }
+      .video-body { grid-template-columns: 27px minmax(0, 1fr) 24px; gap: 7px; padding-top: 9px; }
+      .channel-avatar { width: 27px; height: 27px; font-size: 9px; }
+      .video-copy h3 { font-size: 10px; line-height: 1.4; }
+      .video-copy p { font-size: 9px; }
+      .save-button { width: 24px; }
+      .save-button svg { width: 15px; }
+      .mobile-nav {
+        position: fixed;
+        z-index: 6;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 58px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid var(--line);
+        background: rgba(21,22,25,.96);
+        backdrop-filter: blur(15px);
+      }
+      .mobile-nav a { display: grid; place-content: center; justify-items: center; gap: 3px; color: #9b9ca3; font-size: 8px; }
+      .mobile-nav a.active { color: var(--lime); }
+      .mobile-nav svg { width: 17px; height: 17px; }
+      .player-section { margin-top: 20px; }
+      .player-wrap { border-radius: 10px; }
+    }
+    @media (max-width: 390px) {
+      .brand-word { display: none; }
+      .topbar { grid-template-columns: auto minmax(0, 1fr) auto; }
+      .video-grid { grid-template-columns: 1fr; gap: 19px; }
+      .video-body { grid-template-columns: 32px minmax(0,1fr) 28px; gap: 10px; }
+      .channel-avatar { width: 32px; height: 32px; font-size: 11px; }
+      .video-copy h3 { font-size: 12px; }
+      .video-copy p { font-size: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Playroom home">
+      <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.25 3.7a.65.65 0 0 1 .98-.56l6.06 4.3a.68.68 0 0 1 0 1.12l-6.06 4.3a.65.65 0 0 1-.98-.56V3.7Z"/></svg></span>
+      <span class="brand-word">play<span>room</span></span>
+    </a>
+    <form class="searchbar" id="search-form" role="search">
+      <input id="search-input" type="search" aria-label="Search real YouTube videos" placeholder="Search videos, creators, topics...">
+      <button class="search-button" type="submit" aria-label="Search videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.2 4.2"/></svg></button>
+    </form>
+    <div class="header-actions">
+      <button class="icon-button" id="api-open-header" type="button" aria-label="Connect YouTube search API" title="Connect YouTube search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12m0-12.72-2.12 2.12m-8.48 8.48-2.12 2.12"/><circle cx="12" cy="12" r="4"/></svg></button>
+      <button class="icon-button" id="saved-button" type="button" aria-label="Show saved videos" title="Saved videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.5 4.75A1.75 1.75 0 0 1 8.25 3h7.5a1.75 1.75 0 0 1 1.75 1.75V21l-5.5-3.5L6.5 21V4.75Z"/></svg></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Browse">
+      <div class="nav-group">
+        <p class="group-title">Your space</p>
+        <a class="side-link selected" href="#" id="home-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3.5 10 8.5-7 8.5 7v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-9Z"/><path d="M9 21v-8h6v8"/></svg>Home</a>
+        <a class="side-link" href="#videos" id="trending-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13 2.75S14 7 11.75 9s-1.5-3.25-1.5-3.25S5 9 5 14a7 7 0 0 0 14 0c0-3.75-2.25-7.5-6-11.25Z"/><path d="M12.5 13s2.5 1.75 2.5 4a2.5 2.5 0 0 1-5 0c0-1.25 1-2.75 2.5-4Z"/></svg>Explore</a>
+        <a class="side-link" href="#videos" id="saved-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.5 4.75A1.75 1.75 0 0 1 8.25 3h7.5a1.75 1.75 0 0 1 1.75 1.75V21l-5.5-3.5L6.5 21V4.75Z"/></svg>Saved videos</a>
+      </div>
+      <div class="nav-group">
+        <p class="group-title">Start exploring</p>
+        <button class="side-link category-link" type="button" data-query="music"><span aria-hidden="true">♫</span>Music</button>
+        <button class="side-link category-link" type="button" data-query="gaming"><span aria-hidden="true">🎮</span>Gaming</button>
+        <button class="side-link category-link" type="button" data-query="cooking"><span aria-hidden="true">✳</span>Cooking</button>
+        <button class="side-link category-link" type="button" data-query="travel"><span aria-hidden="true">✈</span>Travel</button>
+        <button class="side-link category-link" type="button" data-query="technology"><span aria-hidden="true">⌘</span>Technology</button>
+        <button class="side-link category-link" type="button" data-query="sports"><span aria-hidden="true">◎</span>Sports</button>
+      </div>
+      <p class="sidebar-foot">Playroom is an independent video discovery experience. Videos are streamed directly from YouTube.</p>
+    </aside>
+
+    <main>
+      <section class="welcome">
+        <div>
+          <p class="kicker">Your next favourite starts here</p>
+          <h1>A good watch<br>changes everything.</h1>
+          <p class="welcome-copy">Search YouTube and play real videos right here.</p>
+        </div>
+        <button class="api-button" id="api-open" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12m0-12.72-2.12 2.12m-8.48 8.48-2.12 2.12"/><circle cx="12" cy="12" r="4"/></svg>Set up search</button>
+      </section>
+
+      <p class="api-status" id="api-status" role="status"><span class="status-dot" aria-hidden="true"></span><span id="api-status-text">Search works with a YouTube API key. No key? Search YouTube directly or paste a video link.</span></p>
+
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-content">
+          <p class="kicker">No rabbit holes required</p>
+          <h2 id="hero-title">Your next <span>favourite video</span> is just around the corner.</h2>
+          <p class="hero-copy">Search actual YouTube videos, or paste a link to start watching right now.</p>
+          <form class="hero-form" id="video-url-form">
+            <input type="url" id="video-url" aria-label="Paste a YouTube video link" placeholder="Paste a YouTube link to play...">
+            <button class="primary-button" type="submit">Play video <span aria-hidden="true">→</span></button>
+          </form>
+        </div>
+      </section>
+
+      <section aria-label="Video topics">
+        <div class="section-title">
+          <div><h2 class="section-heading">Pick a mood</h2><p class="section-caption">Choose a topic to search YouTube</p></div>
+        </div>
+        <div class="category-row" id="category-row">
+          <button class="category-pill active" type="button" data-query="lofi music mix">✳ &nbsp;For you</button>
+          <button class="category-pill" type="button" data-query="popular music">♫ &nbsp;Music</button>
+          <button class="category-pill" type="button" data-query="gaming highlights">◈ &nbsp;Gaming</button>
+          <button class="category-pill" type="button" data-query="easy cooking recipes">✳ &nbsp;Food</button>
+          <button class="category-pill" type="button" data-query="travel documentary">↗ &nbsp;Travel</button>
+          <button class="category-pill" type="button" data-query="technology review">⌘ &nbsp;Tech</button>
+          <button class="category-pill" type="button" data-query="sports highlights">◎ &nbsp;Sports</button>
+          <button class="category-pill" type="button" data-query="funny animals">♡ &nbsp;Animals</button>
+        </div>
+      </section>
+
+      <section class="player-section" id="player-section" aria-label="YouTube video player">
+        <div class="player-wrap"><iframe id="youtube-player" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+        <div class="player-caption">
+          <h2 id="player-title">Now playing</h2>
+          <a class="outline-button" id="youtube-link" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">Open on YouTube ↗</a>
+        </div>
+      </section>
+
+      <section id="videos" aria-labelledby="results-title">
+        <div class="results-toolbar">
+          <div><h2 id="results-title">Start exploring</h2><p class="section-caption" id="results-caption">Real videos appear here when you search.</p></div>
+          <span class="results-count" id="results-count" aria-live="polite"></span>
+        </div>
+        <div class="video-grid" id="video-grid">
+          <div class="empty-state" id="initial-state">
+            <div><strong>Ready when you are.</strong>Search for something you love to find real YouTube videos.<br>To see results here, connect a free YouTube Data API key.<br><br><a class="inline-link" href="https://www.youtube.com/results?search_query=lofi+music+mix" target="_blank" rel="noopener noreferrer">Or browse YouTube without an API key ↗</a></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <a class="active" href="#" id="mobile-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3.5 10 8.5-7 8.5 7v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-9Z"/><path d="M9 21v-8h6v8"/></svg>Home</a>
+    <a href="#videos" id="mobile-explore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="m15.7 8.3-2.5 5-4.9 2.4 2.4-4.9 5-2.5Z"/></svg>Explore</a>
+    <a href="#videos" id="mobile-saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.5 4.75A1.75 1.75 0 0 1 8.25 3h7.5a1.75 1.75 0 0 1 1.75 1.75V21l-5.5-3.5L6.5 21V4.75Z"/></svg>Saved</a>
+    <a href="#videos" id="mobile-api"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12m0-12.72-2.12 2.12m-8.48 8.48-2.12 2.12"/><circle cx="12" cy="12" r="4"/></svg>Settings</a>
+  </nav>
+
+  <dialog id="api-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-inner">
+      <div class="dialog-head">
+        <div><h2 id="dialog-title">Connect YouTube search</h2><p>Search for real videos without leaving Playroom.</p></div>
+        <button class="dialog-close" id="dialog-close" type="button" aria-label="Close settings">×</button>
+      </div>
+      <p class="dialog-copy">A free YouTube Data API v3 key unlocks in-app video search. Your key stays in this browser tab only; it is not saved or sent anywhere except Google's YouTube API.</p>
+      <label class="key-label" for="api-key">YouTube Data API key</label>
+      <input class="key-input" id="api-key" type="password" placeholder="Paste your API key" autocomplete="off" spellcheck="false">
+      <p class="dialog-copy">Create a key in the <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">Google Cloud Console ↗</a>, enable YouTube Data API v3, then paste it here. Never put a private key on a public website.</p>
+      <div class="dialog-actions">
+        <button class="outline-button" id="clear-key" type="button">Clear key</button>
+        <button class="primary-button" id="save-key" type="button">Use key</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const API_ENDPOINT = "https://www.googleapis.com/youtube/v3/search";
+      const searchForm = document.getElementById("search-form");
+      const searchInput = document.getElementById("search-input");
+      const videoGrid = document.getElementById("video-grid");
+      const resultsTitle = document.getElementById("results-title");
+      const resultsCaption = document.getElementById("results-caption");
+      const resultsCount = document.getElementById("results-count");
+      const playerSection = document.getElementById("player-section");
+      const youtubePlayer = document.getElementById("youtube-player");
+      const playerTitle = document.getElementById("player-title");
+      const youtubeLink = document.getElementById("youtube-link");
+      const apiDialog = document.getElementById("api-dialog");
+      const apiKeyInput = document.getElementById("api-key");
+      const apiStatus = document.getElementById("api-status");
+      const apiStatusText = document.getElementById("api-status-text");
+      const toast = document.getElementById("toast");
+      const savedStorageKey = "playroom.savedVideos.v1";
+      let apiKey = "";
+      let activeQuery = "";
+      let viewingSaved = false;
+      let toastTimer;
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("visible");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("visible"), 5000);
+      }
+
+      function setApiConnected(connected) {
+        apiStatus.classList.toggle("connected", connected);
+        apiStatusText.textContent = connected
+          ? "YouTube Search is connected. Search for any topic to see real videos."
+          : "Search works with a YouTube API key. No key? Search YouTube directly or paste a video link.";
+      }
+
+      function getSavedVideos() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(savedStorageKey) || "[]");
+          return Array.isArray(stored) ? stored.filter((item) => item && typeof item.id === "string") : [];
+        } catch (error) {
+          console.error("Could not read saved videos:", error);
+          showToast("Saved videos could not be read from this browser.");
+          return [];
+        }
+      }
+
+      function updateSavedVideos(videos) {
+        try {
+          localStorage.setItem(savedStorageKey, JSON.stringify(videos));
+          return true;
+        } catch (error) {
+          console.error("Could not save videos:", error);
+          showToast("Could not save videos. Check your browser's storage settings.");
+          return false;
+        }
+      }
+
+      function setEmptyState(title, description) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        const content = document.createElement("div");
+        const heading = document.createElement("strong");
+        heading.textContent = title;
+        content.append(heading, document.createTextNode(description));
+        empty.append(content);
+        videoGrid.replaceChildren(empty);
+        resultsCount.textContent = "";
+      }
+
+      function videoCardMarkup(video) {
+        const safeTitle = escapeHtml(video.title);
+        const safeChannel = escapeHtml(video.channel);
+        const safeImage = escapeHtml(video.thumbnail);
+        return `<article class="video-card" data-video-id="${escapeHtml(video.id)}">
+          <a class="thumbnail" href="https://www.youtube.com/watch?v=${encodeURIComponent(video.id)}" aria-label="Play ${safeTitle}">
+            <img src="${safeImage}" alt="" loading="lazy" referrerpolicy="no-referrer">
+            <span class="play-overlay" aria-hidden="true"><span>▶</span></span>
+          </a>
+          <div class="video-body">
+            <span class="channel-avatar" aria-hidden="true">${escapeHtml((video.channel || "Y").trim().charAt(0).toUpperCase())}</span>
+            <div class="video-copy"><h3>${safeTitle}</h3><p>${safeChannel}</p></div>
+            <button class="save-button" type="button" aria-label="Save ${safeTitle}" title="Save video" data-save-id="${escapeHtml(video.id)}" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 4.75A1.75 1.75 0 0 1 8.25 3h7.5a1.75 1.75 0 0 1 1.75 1.75V21l-5.5-3.5L6.5 21V4.75Z"/></svg>
+            </button>
+          </div>
+        </article>`;
+      }
+
+      function escapeHtml(value) {
+        const node = document.createElement("span");
+        node.textContent = String(value ?? "");
+        return node.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+
+      function renderVideos(videos) {
+        if (!videos.length) {
+          setEmptyState(viewingSaved ? "Nothing saved just yet." : "No videos found.", viewingSaved ? "Search for something you love and press the bookmark to save it here." : "Try a different search term.");
+          return;
+        }
+        videoGrid.innerHTML = videos.map(videoCardMarkup).join("");
+        resultsCount.textContent = `${videos.length} ${videos.length === 1 ? "video" : "videos"}`;
+        const savedIds = new Set(getSavedVideos().map((video) => video.id));
+        videoGrid.querySelectorAll("[data-save-id]").forEach((button) => {
+          const isSaved = savedIds.has(button.dataset.saveId);
+          button.classList.toggle("saved", isSaved);
+          button.setAttribute("aria-pressed", String(isSaved));
+          button.title = isSaved ? "Remove saved video" : "Save video";
+        });
+      }
+
+      function playVideo(id, title) {
+        if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) {
+          showToast("That doesn't look like a valid YouTube video link. Try a regular video URL.");
+          return;
+        }
+        youtubePlayer.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&playsinline=1&rel=0`;
+        playerTitle.textContent = title || "Now playing";
+        youtubeLink.href = `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+        playerSection.classList.add("visible");
+        playerSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function parseVideoId(rawUrl) {
+        try {
+          const url = new URL(rawUrl);
+          const host = url.hostname.toLowerCase().replace(/^www\./, "");
+          if (host === "youtu.be") return url.pathname.split("/").filter(Boolean)[0] || "";
+          if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com" || host === "youtube-nocookie.com") {
+            if (url.pathname === "/watch") return url.searchParams.get("v") || "";
+            const match = url.pathname.match(/^\/(?:embed|shorts|live)\/([^/]+)/);
+            return match ? match[1] : "";
+          }
+          return "";
+        } catch {
+          return "";
+        }
+      }
+
+      function fallbackSearch(query) {
+        const destination = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+        const opened = window.open(destination, "_blank", "noopener,noreferrer");
+        if (opened) opened.opener = null;
+        showToast("In-app search needs a YouTube API key. Opening official YouTube search in a new tab.");
+      }
+
+      async function searchVideos(query) {
+        const normalizedQuery = query.trim();
+        if (!normalizedQuery) {
+          showToast("Type something to search for.");
+          searchInput.focus();
+          return;
+        }
+        if (!apiKey) {
+          fallbackSearch(normalizedQuery);
+          return;
+        }
+        viewingSaved = false;
+        activeQuery = normalizedQuery;
+        resultsTitle.textContent = `Results for "${normalizedQuery}"`;
+        resultsCaption.textContent = "Searching real videos on YouTube…";
+        setEmptyState("Finding videos…", "Connecting to YouTube. This usually takes a moment.");
+        try {
+          const params = new URLSearchParams({
+            part: "snippet",
+            type: "video",
+            maxResults: "12",
+            safeSearch: "moderate",
+            q: normalizedQuery,
+            key: apiKey
+          });
+          const response = await fetch(`${API_ENDPOINT}?${params.toString()}`);
+          const payload = await response.json();
+          if (!response.ok) {
+            const apiMessage = payload?.error?.message || `YouTube API returned HTTP ${response.status}.`;
+            throw new Error(apiMessage);
+          }
+          const videos = (payload.items || []).filter((item) => item.id?.videoId).map((item) => ({
+            id: item.id.videoId,
+            title: item.snippet?.title || "Untitled video",
+            channel: item.snippet?.channelTitle || "YouTube creator",
+            thumbnail: item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || `https://i.ytimg.com/vi/${encodeURIComponent(item.id.videoId)}/mqdefault.jpg`
+          }));
+          resultsCaption.textContent = "Real video results from YouTube.";
+          renderVideos(videos);
+          if (!videos.length) resultsCaption.textContent = "No results for this search. Try a different topic.";
+        } catch (error) {
+          console.error("YouTube video search failed:", error);
+          resultsCaption.textContent = "YouTube search couldn't load.";
+          setEmptyState("Couldn't load search results.", error.message || "Check your connection and YouTube API key, then try again.");
+          showToast(error.message || "YouTube search failed. Check the API key and try again.");
+        }
+      }
+
+      function showSavedVideos() {
+        viewingSaved = true;
+        resultsTitle.textContent = "Your saved videos";
+        resultsCaption.textContent = "Saved in this browser, just for you.";
+        renderVideos(getSavedVideos());
+        document.getElementById("videos").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function setActiveCategory(button) {
+        document.querySelectorAll(".category-pill").forEach((pill) => pill.classList.toggle("active", pill === button));
+      }
+
+      searchForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        searchVideos(searchInput.value);
+      });
+
+      document.querySelectorAll(".category-pill, .category-link").forEach((button) => {
+        button.addEventListener("click", () => {
+          const query = button.dataset.query;
+          searchInput.value = query;
+          const pill = document.querySelector(`.category-pill[data-query="${CSS.escape(query)}"]`);
+          if (pill) setActiveCategory(pill);
+          searchVideos(query);
+        });
+      });
+
+      document.getElementById("video-url-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const url = document.getElementById("video-url").value.trim();
+        const videoId = parseVideoId(url);
+        if (!videoId) {
+          showToast("Paste a valid YouTube video link (youtube.com, youtu.be, or a Shorts URL).");
+          return;
+        }
+        playVideo(videoId, "Now playing");
+        document.getElementById("video-url").value = "";
+      });
+
+      videoGrid.addEventListener("click", (event) => {
+        const saveButton = event.target.closest("[data-save-id]");
+        if (saveButton) {
+          const id = saveButton.dataset.saveId;
+          const saved = getSavedVideos();
+          const existingIndex = saved.findIndex((video) => video.id === id);
+          if (existingIndex >= 0) {
+            saved.splice(existingIndex, 1);
+            if (!updateSavedVideos(saved)) return;
+            showToast("Removed from your saved videos.");
+          } else {
+            const card = saveButton.closest(".video-card");
+            const title = card.querySelector(".video-copy h3").textContent;
+            const channel = card.querySelector(".video-copy p").textContent;
+            const thumbnail = card.querySelector(".thumbnail img").src;
+            if (!updateSavedVideos([{ id, title, channel, thumbnail }, ...saved])) return;
+            showToast("Saved to your video list.");
+          }
+          renderVideos(viewingSaved ? getSavedVideos() : [...videoGrid.querySelectorAll(".video-card")].map((card) => {
+            const id = card.dataset.videoId;
+            const savedVideo = getSavedVideos().find((video) => video.id === id);
+            if (savedVideo) return savedVideo;
+            const img = card.querySelector(".thumbnail img");
+            return { id, title: card.querySelector(".video-copy h3").textContent, channel: card.querySelector(".video-copy p").textContent, thumbnail: img.src };
+          }));
+          return;
+        }
+        const thumbnail = event.target.closest(".thumbnail");
+        if (thumbnail) {
+          event.preventDefault();
+          const card = thumbnail.closest(".video-card");
+          playVideo(card.dataset.videoId, card.querySelector(".video-copy h3").textContent);
+        }
+      });
+
+      function openApiDialog() {
+        apiKeyInput.value = "";
+        apiDialog.showModal();
+        apiKeyInput.focus();
+      }
+      document.getElementById("api-open").addEventListener("click", openApiDialog);
+      document.getElementById("api-open-header").addEventListener("click", openApiDialog);
+      document.getElementById("mobile-api").addEventListener("click", (event) => { event.preventDefault(); openApiDialog(); });
+      document.getElementById("dialog-close").addEventListener("click", () => apiDialog.close());
+      apiDialog.addEventListener("click", (event) => {
+        if (event.target === apiDialog) apiDialog.close();
+      });
+      document.getElementById("save-key").addEventListener("click", () => {
+        const candidate = apiKeyInput.value.trim();
+        if (!candidate) {
+          showToast("Paste a YouTube Data API key first.");
+          apiKeyInput.focus();
+          return;
+        }
+        apiKey = candidate;
+        setApiConnected(true);
+        apiDialog.close();
+        showToast("YouTube search connected for this tab.");
+        if (searchInput.value.trim()) searchVideos(searchInput.value);
+      });
+      document.getElementById("clear-key").addEventListener("click", () => {
+        apiKey = "";
+        apiKeyInput.value = "";
+        setApiConnected(false);
+        apiDialog.close();
+        showToast("YouTube API key cleared from this tab.");
+      });
+
+      document.getElementById("saved-button").addEventListener("click", showSavedVideos);
+      document.getElementById("saved-link").addEventListener("click", showSavedVideos);
+      document.getElementById("mobile-saved").addEventListener("click", showSavedVideos);
+      document.getElementById("home-link").addEventListener("click", () => {
+        viewingSaved = false;
+        resultsTitle.textContent = activeQuery ? `Results for "${activeQuery}"` : "Start exploring";
+      });
+      document.getElementById("mobile-home").addEventListener("click", () => {
+        viewingSaved = false;
+        resultsTitle.textContent = activeQuery ? `Results for "${activeQuery}"` : "Start exploring";
+      });
+      document.getElementById("trending-link").addEventListener("click", (event) => {
+        event.preventDefault();
+        searchInput.value = "trending videos";
+        searchVideos(searchInput.value);
+      });
+      document.getElementById("mobile-explore").addEventListener("click", (event) => {
+        event.preventDefault();
+        searchInput.value = "trending videos";
+        searchVideos(searchInput.value);
+      });
+    })();
+  </script>
+</body>
+</html>
